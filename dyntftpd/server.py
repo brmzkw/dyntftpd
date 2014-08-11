@@ -5,6 +5,8 @@ import SocketServer
 
 
 class TFTPUDPHandler(SocketServer.BaseRequestHandler):
+    """ http://tools.ietf.org/html/rfc1350
+    """
 
     # opcodes
     OP_RRQ = 1
@@ -58,7 +60,12 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             )
             return
 
-        handle = open(os.path.join(self.server.root, filename))
+        try:
+            handle = open(self.server.find_file(filename))
+        except ValueError:
+            self.send_error(self.ERR_PERM, 'Directory trasversal prevented')
+            return
+
         self.server.sessions[self.client_address] = TFTPSession(handle)
         self.send_data()
 
@@ -66,7 +73,11 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         """ Client has aknowledged a block id. Can be a retransmission or the
         next packet to send.
         """
-        session = self.server.sessions[self.client_address]
+        session = self.server.sessions.get(self.client_address)
+
+        # If the ACK does not correspond to a read request
+        if not session:
+            return
 
         # Last packet was received
         if block_id == session.block_id + 1:
@@ -122,6 +133,14 @@ class TFTPServer(SocketServer.UDPServer):
         self.sessions = {}
         self.root = root
         SocketServer.UDPServer.__init__(self, (host, port), self.handler)
+
+    def find_file(self, filename):
+        """ Find the absolute path of `filename` located in root.
+        """
+        abs_path = os.path.abspath(os.path.join(self.root, filename))
+        if os.path.commonprefix([abs_path, self.root]) != self.root:
+            raise ValueError('non')
+        return abs_path
 
 
 def main():
