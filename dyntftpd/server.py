@@ -1,3 +1,4 @@
+import errno
 import os
 import struct
 
@@ -61,9 +62,17 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             return
 
         try:
-            handle = open(self.server.find_file(filename))
+            filename = self.server.find_file(filename)
         except ValueError:
             self.send_error(self.ERR_PERM, 'Directory trasversal prevented')
+            return
+
+        try:
+            handle = open(filename)
+        except IOError as exc:
+            err = self.ERR_NOT_FOUND if exc.errno == errno.ENOENT else \
+                self.ERR_PERM
+            self.send_error(err, exc.strerror)
             return
 
         self.server.sessions[self.client_address] = TFTPSession(handle)
