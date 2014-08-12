@@ -63,8 +63,8 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
 
         try:
             filename = self.server.find_file(filename)
-        except ValueError:
-            self.send_error(self.ERR_PERM, 'Directory trasversal prevented')
+        except ValueError as exc:
+            self.send_error(self.ERR_PERM, str(exc))
             return
 
         try:
@@ -148,7 +148,7 @@ class TFTPServer(SocketServer.UDPServer):
         """
         abs_path = os.path.abspath(os.path.join(self.root, filename))
         if os.path.commonprefix([abs_path, self.root]) != self.root:
-            raise ValueError('non')
+            raise ValueError('Directory trasversal prevented')
         return abs_path
 
 
