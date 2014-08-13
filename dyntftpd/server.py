@@ -32,7 +32,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         """ Extract header info and dispatch to handle_* methods.
         """
-        data, socket = self.request
+        data = self.request[0]
         opcode, = struct.unpack('!h', data[0:2])
 
         data = data[2:]  # skip opcode
