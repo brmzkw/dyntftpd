@@ -86,10 +86,13 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         try:
             handle = self.load_file(filename)
         except IOError as exc:
+            # If ENOENT, consider the file is missing. Otherwise, consider we
+            # don't have the permission to read it.
+            err_msg = exc.strerror or str(exc)
             if exc.errno == errno.ENOENT:
-                self.send_error(self.ERR_NOT_FOUND, exc.strerror)
+                self.send_error(self.ERR_NOT_FOUND, err_msg)
             else:
-                self.send_error(self.ERR_PERM, exc.strerror)
+                self.send_error(self.ERR_PERM, err_msg)
             return
 
         self.server.sessions[self.client_address] = TFTPSession(handle)
