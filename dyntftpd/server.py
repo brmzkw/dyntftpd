@@ -168,9 +168,6 @@ class TFTPServer(SocketServer.UDPServer):
     def __init__(self, host='', port=69, root='/tftboot',
                  handler=FileSystemHandler):
 
-        if not os.path.isdir(root):
-            raise ValueError("'%s' is not a valid directory" % root)
-
         self.sessions = {}
         self.root = root
         SocketServer.UDPServer.__init__(self, (host, port), handler)
