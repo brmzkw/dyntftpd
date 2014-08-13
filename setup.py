@@ -56,7 +56,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'dyntftpd = dyntftpd.server:main'
+            'dyntftpd = dyntftpd.cli:main'
         ]
     }
 )
