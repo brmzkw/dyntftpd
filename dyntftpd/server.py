@@ -152,7 +152,13 @@ class TFTPSession(object):
 class FileSystemHandler(TFTPUDPHandler):
 
     def sanitize_filename(self, filename):
-        return self.server.find_file(filename)
+        """ Raise if trying to open a file up to the root folder.
+        """
+        server_root = self.server.root
+        abs_path = os.path.abspath(os.path.join(server_root, filename))
+        if os.path.commonprefix([abs_path, server_root]) != server_root:
+            raise ValueError('Directory trasversal prevented')
+        return abs_path
 
     def load_file(self, filename):
         return open(filename)
@@ -170,14 +176,6 @@ class TFTPServer(SocketServer.UDPServer):
         self.sessions = {}
         self.root = root
         SocketServer.UDPServer.__init__(self, (host, port), self.handler)
-
-    def find_file(self, filename):
-        """ Find the absolute path of `filename` located in root.
-        """
-        abs_path = os.path.abspath(os.path.join(self.root, filename))
-        if os.path.commonprefix([abs_path, self.root]) != self.root:
-            raise ValueError('Directory trasversal prevented')
-        return abs_path
 
 
 def main():
