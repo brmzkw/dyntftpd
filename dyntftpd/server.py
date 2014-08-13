@@ -7,7 +7,9 @@ import SocketServer
 
 
 class TFTPUDPHandler(SocketServer.BaseRequestHandler):
-    """ http://tools.ietf.org/html/rfc1350
+    """ Mixin. Implementation of the TFTP protocol.
+
+    http://tools.ietf.org/html/rfc1350
     """
 
     # opcodes
@@ -63,21 +65,33 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             return
 
         try:
-            filename = self.server.find_file(filename)
+            filename = self.sanitize_filename(filename)
         except ValueError as exc:
             self.send_error(self.ERR_PERM, str(exc))
             return
 
         try:
-            handle = open(filename)
+            handle = self.load_file(filename)
         except IOError as exc:
-            err = self.ERR_NOT_FOUND if exc.errno == errno.ENOENT else \
-                self.ERR_PERM
-            self.send_error(err, exc.strerror)
+            if exc.errno == errno.ENOENT:
+                self.send_error(self.ERR_NOT_FOUND, exc.strerror)
+            else:
+                self.send_error(self.ERR_PERM, exc.strerror)
             return
 
         self.server.sessions[self.client_address] = TFTPSession(handle)
         self.send_data()
+
+    def sanitize_filename(self, filename):
+        """ Compute a filename that can be loaded by load_file. Make security
+        checks to prevent path transversal.
+        """
+        raise NotImplementedError()
+
+    def load_file(self, filename):
+        """ Return a FILE like object.
+        """
+        raise NotImplementedError()
 
     def handle_ack(self, block_id):
         """ Client has aknowledged a block id. Can be a retransmission or the
@@ -135,9 +149,18 @@ class TFTPSession(object):
         self.last_read_is_eof = False
 
 
+class FileSystemHandler(TFTPUDPHandler):
+
+    def sanitize_filename(self, filename):
+        return self.server.find_file(filename)
+
+    def load_file(self, filename):
+        return open(filename)
+
+
 class TFTPServer(SocketServer.UDPServer):
 
-    handler = TFTPUDPHandler
+    handler = FileSystemHandler
 
     def __init__(self, host='', port=69, root='/tftboot'):
 
