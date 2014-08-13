@@ -1,8 +1,12 @@
 import errno
+import logging
 import os
 import struct
 
 import SocketServer
+
+
+logger = logging.getLogger(__name__)
 
 
 class TFTPUDPHandler(SocketServer.BaseRequestHandler):
@@ -27,6 +31,14 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
     ERR_UNKNOWN_TID = 5
     ERR_ALREADY_EXISTS = 6
     ERR_NO_SUCH_USER = 7
+
+    def _log(self, level, msg, extra=None):
+        """ Add client_ip to extra.
+        """
+        log_extra = {'client_ip': self.client_address[0]}
+        if extra:
+            log_extra.update(extra)
+        logger.log(level, msg, extra=log_extra)
 
     def handle(self):
         """ Extract header info and dispatch to handle_* methods.
@@ -56,6 +68,8 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
 
         Create a new session.
         """
+        self._log(logging.INFO, 'GET %s (%s)' % (filename, mode))
+
         if mode.lower() != 'octet':
             self.send_error(
                 self.ERR_ILLEGAL_OPERATION,
@@ -96,6 +110,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         """ Client has aknowledged a block id. Can be a retransmission or the
         next packet to send.
         """
+        self._log(logging.DEBUG, 'ACK (block %s)' % block_id)
         session = self.server.sessions.get(self.client_address)
 
         # If the ACK does not correspond to a read request

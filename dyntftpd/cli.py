@@ -1,4 +1,5 @@
 import argparse
+import logging
 
 from .server import TFTPServer
 
@@ -16,6 +17,10 @@ def arguments_parser():
 
 
 def main():
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='[%(asctime)-15s] %(client_ip)s: %(message)s'
+    )
     parser = arguments_parser()
     args = parser.parse_args()
     tftp_server = TFTPServer(args.host, args.port, root=args.root)
