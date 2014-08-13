@@ -17,11 +17,17 @@ def arguments_parser():
 
 
 def main():
+    parser = arguments_parser()
+    parser.add_argument(
+        '-v', dest='verbose', action='count', default=0, help='Verbose mode'
+    )
+    args = parser.parse_args()
+
+    log_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=log_level,
         format='[%(asctime)-15s] %(client_ip)s: %(message)s'
     )
-    parser = arguments_parser()
-    args = parser.parse_args()
+
     tftp_server = TFTPServer(args.host, args.port, root=args.root)
     tftp_server.serve_forever()
