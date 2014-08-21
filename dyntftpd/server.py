@@ -6,9 +6,6 @@ import struct
 import SocketServer
 
 
-logger = logging.getLogger(__name__)
-
-
 class TFTPUDPHandler(SocketServer.BaseRequestHandler):
     """ Mixin. Implementation of the TFTP protocol.
 
@@ -38,6 +35,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         log_extra = {'client_ip': self.client_address[0]}
         if extra:
             log_extra.update(extra)
+        logger = logging.getLogger(__name__)
         logger.log(level, msg, extra=log_extra)
 
     def handle(self):
