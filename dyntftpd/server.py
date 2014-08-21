@@ -123,6 +123,10 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
 
             # Final ACK from the client, kill the sesssion
             if session.last_read_is_eof:
+                self._log(
+                    logging.INFO,
+                    'Transfer of %s successful' % session.handle.name
+                )
                 del self.server.sessions[self.client_address]
                 return
 
