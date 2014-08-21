@@ -154,6 +154,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
     def send_error(self, error_code, error_msg):
         """ Send error packet to the client.
         """
+        self._log(logging.ERROR, error_msg)
         socket = self.request[1]
         packed = struct.pack('!hh', self.OP_ERROR, error_code)
         packed += error_msg + '\x00'
