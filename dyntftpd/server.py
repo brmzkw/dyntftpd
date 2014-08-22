@@ -90,9 +90,13 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             # don't have the permission to read it.
             err_msg = exc.strerror or str(exc)
             if exc.errno == errno.ENOENT:
-                self.send_error(self.ERR_NOT_FOUND, err_msg)
+                self.send_error(
+                    self.ERR_NOT_FOUND, '%s (%s)' % (err_msg, filename)
+                )
             else:
-                self.send_error(self.ERR_PERM, err_msg)
+                self.send_error(
+                    self.ERR_PERM, '%s (%s)' % (err_msg, filename)
+                )
             return
 
         self.server.sessions[self.client_address] = TFTPSession(handle)
