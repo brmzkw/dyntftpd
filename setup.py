@@ -30,8 +30,8 @@ def get_version():
 
 def get_long_description():
     """ Reads description from README and CHANGES. """
-    with open(find_file('README.md')) as readme, \
-        open(find_file('CHANGES.md')) as changes:
+    with open(find_file('README.rst')) as readme, \
+        open(find_file('CHANGES.rst')) as changes:
         return readme.read() + '\n' + changes.read()
 
 
