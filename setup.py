@@ -46,6 +46,7 @@ setup(
     packages=find_packages(),
     install_requires=DEPENDENCIES,
     tests_require=DEPENDENCIES + TEST_DEPENDENCIES,
+    test_suite='tests',
     classifiers=[
         # As from http://pypi.python.org/pypi?%3Aaction=list_classifiers
         'Development Status :: 2 - Pre-Alpha',
