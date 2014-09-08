@@ -39,6 +39,7 @@ setup(
     name=MODULE_NAME,
     version=get_version(),
     description='A simple TFTP server',
+    download_url='https://github.com/brmzkw/dyntftpd/tarball/v0.1.0',
     long_description=get_long_description(),
     author='Julien Castets',
     author_email='castets.j@gmail.com',
