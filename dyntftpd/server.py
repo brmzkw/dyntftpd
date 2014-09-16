@@ -115,7 +115,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
                 )
             return
 
-        self.server.sessions[self.client_address] = TFTPSession(handle)
+        self.server.sessions[self.client_address] = TFTPSession(filename, handle)
         self.send_data()
 
     def sanitize_filename(self, filename):
@@ -147,7 +147,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             if session.last_read_is_eof:
                 self._log(
                     logging.INFO,
-                    'Transfer of %s successful' % session.handle.name
+                    'Transfer of %s successful' % session.filename
                 )
                 del self.server.sessions[self.client_address]
                 return
@@ -185,8 +185,9 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
 
 class TFTPSession(object):
 
-    def __init__(self, handle):
+    def __init__(self, filename, handle):
         self.block_id = 0
+        self.filename = filename
         self.handle = handle
         self.last_read_is_eof = False
 
