@@ -34,8 +34,13 @@ class TFTPServerTestCase(unittest.TestCase):
     def send(self, message):
         self.client_socket.sendto(message, (self.listen_ip, self.listen_port))
 
-    def get_file(self, filename, mode='octet'):
-        return self.send('\x00\x01%s\x00%s\x00' % (filename, mode))
+    def get_file(self, filename, mode='octet', options=None):
+        request = '\x00\x01%s\x00%s\x00' % (filename, mode)
+        if options is not None:
+            request += ''.join([
+                '%s\x00%s\x00' % (k, v) for k, v in options.items()
+            ])
+        return self.send(request)
 
     def recv(self, size=1024):
         data, addr = self.client_socket.recvfrom(size)
@@ -54,6 +59,21 @@ class TFTPServerTestCase(unittest.TestCase):
 
 
 class TestFileSystemHandler(TFTPServerTestCase):
+
+    def test_invalid_request(self):
+        # Missing trailing \x00
+        self.send('\x00\x01filename\x00octet')
+        data, addr = self.recv()
+        self.assertTrue(data.startswith('\x00\x05\x00\x04'))
+
+        # Not enough arguments
+        self.send('\x00\x01')
+        data, addr = self.recv()
+        self.assertTrue(data.startswith('\x00\x05\x00\x04'))
+
+        self.send('\x00\x01filename\x00')
+        data, addr = self.recv()
+        self.assertTrue(data.startswith('\x00\x05\x00\x04'))
 
     def test_non_existing(self):
         self.get_file('invalid')
@@ -88,6 +108,22 @@ class TestFileSystemHandler(TFTPServerTestCase):
         handle.flush()
 
         self.get_file('test.txt')
+        data, addr = self.recv()
+        # \x00\x03 = data
+        # \x00\x01 = block id 1
+        self.assertEqual(data, '\x00\x03\x00\x01hello world')
+        self.ack_n(1)
+
+    def test_options(self):
+        """ Ensures options are ignored
+
+        http://tools.ietf.org/html/rfc1782
+        """
+        handle = open(os.path.join(self.tftp_root, 'test.txt'), 'w+')
+        handle.write('hello world')
+        handle.flush()
+
+        self.get_file('test.txt', options={'blksize': 1024, 'timeout': 5})
         data, addr = self.recv()
         # \x00\x03 = data
         # \x00\x01 = block id 1

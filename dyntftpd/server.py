@@ -13,6 +13,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
     """ Mixin. Implementation of the TFTP protocol.
 
     http://tools.ietf.org/html/rfc1350
+    http://tools.ietf.org/html/rfc1782
     """
 
     # opcodes
@@ -49,8 +50,23 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         data = data[2:]  # skip opcode
 
         if opcode == self.OP_RRQ:
-            filename = data[:data.index('\x00')]
-            mode = data[len(filename) + 1:-1]  # skip leading and trailing \x00
+            args = data.split('\x00')
+
+            if args[-1] != '':
+                return self.send_error(
+                    self.ERR_ILLEGAL_OPERATION,
+                    'Final argument should end with a \\0'
+                )
+            args = args[:-1]  # skip final \0
+
+            if len(args) < 2:
+                return self.send_error(
+                    self.ERR_ILLEGAL_OPERATION,
+                    "Filename and mode required"
+                )
+
+            filename, mode = args[0], args[1]
+            # Ignore extra options (if len(args) > 2)
             self.handle_rrq(filename, mode)
 
         elif opcode == self.OP_ACK:
@@ -58,7 +74,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             self.handle_ack(block_id)
 
         else:
-            self.send_error(
+            return self.send_error(
                 self.ERR_ILLEGAL_OPERATION,
                 'Opcode %d not handled by the server' % opcode
             )
