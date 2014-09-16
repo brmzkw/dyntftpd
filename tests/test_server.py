@@ -63,21 +63,21 @@ class TestFileSystemHandler(TFTPServerTestCase):
     def test_invalid_request(self):
         # Missing trailing \x00
         self.send('\x00\x01filename\x00octet')
-        data, addr = self.recv()
+        data, _ = self.recv()
         self.assertTrue(data.startswith('\x00\x05\x00\x04'))
 
         # Not enough arguments
         self.send('\x00\x01')
-        data, addr = self.recv()
+        data, _ = self.recv()
         self.assertTrue(data.startswith('\x00\x05\x00\x04'))
 
         self.send('\x00\x01filename\x00')
-        data, addr = self.recv()
+        data, _ = self.recv()
         self.assertTrue(data.startswith('\x00\x05\x00\x04'))
 
     def test_non_existing(self):
         self.get_file('invalid')
-        data, addr = self.recv()
+        data, _ = self.recv()
         # \x00\x05 = error
         # \x00\x01 = no such file
         self.assertTrue(data.startswith('\x00\x05\x00\x01'))
@@ -86,7 +86,7 @@ class TestFileSystemHandler(TFTPServerTestCase):
         """ Currently, the server only supports ascii transfers.
         """
         self.get_file('yo.txt', mode='ascii')
-        data, addr = self.recv()
+        data, _ = self.recv()
         # \x00\x05 = error
         # \x00\x04 = illegal operation
         self.assertTrue(data.startswith('\x00\x05\x00\x04'))
@@ -96,7 +96,7 @@ class TestFileSystemHandler(TFTPServerTestCase):
         handle.close()
 
         self.get_file('test.txt')
-        data, addr = self.recv()
+        data, _ = self.recv()
         # \x00\x03 = data
         # \x00\x01 = block id 1
         self.assertEqual(data, '\x00\x03\x00\x01')
@@ -108,7 +108,7 @@ class TestFileSystemHandler(TFTPServerTestCase):
         handle.flush()
 
         self.get_file('test.txt')
-        data, addr = self.recv()
+        data, _ = self.recv()
         # \x00\x03 = data
         # \x00\x01 = block id 1
         self.assertEqual(data, '\x00\x03\x00\x01hello world')
@@ -124,7 +124,7 @@ class TestFileSystemHandler(TFTPServerTestCase):
         handle.flush()
 
         self.get_file('test.txt', options={'blksize': 1024, 'timeout': 5})
-        data, addr = self.recv()
+        data, _ = self.recv()
         # \x00\x03 = data
         # \x00\x01 = block id 1
         self.assertEqual(data, '\x00\x03\x00\x01hello world')
@@ -138,26 +138,26 @@ class TestFileSystemHandler(TFTPServerTestCase):
         handle.flush()
 
         self.get_file('test.txt')
-        data, addr = self.recv()
+        data, _ = self.recv()
         # \x00\x03 = data
         # \x00\x01 = block id 1
         self.assertEqual(len(data), 516)
         self.assertEqual(data, '\x00\x03\x00\x01' + 'A' * 512)
         self.ack_n(1)
 
-        data, addr = self.recv()
+        data, _ = self.recv()
         self.assertEqual(len(data), 516)
         self.assertEqual(data, '\x00\x03\x00\x02' + 'B' * 512)
         self.ack_n(2)
 
-        data, addr = self.recv()
+        data, _ = self.recv()
         self.assertEqual(len(data), 36)
         self.assertEqual(data, '\x00\x03\x00\x03' + 'C' * 32)
         self.ack_n(3)
 
     def test_directory_transversal(self):
         self.get_file('../../yo.txt')
-        data, addr = self.recv()
+        data, _ = self.recv()
         # \x00\x05 = error
         # \x00\x04 = permission denied
         self.assertTrue(data.startswith('\x00\x05\x00\x02'))
@@ -170,7 +170,7 @@ class TestFileSystemHandler(TFTPServerTestCase):
         handle.flush()
 
         self.get_file('test.txt')
-        data, addr = self.recv()
+        data, _ = self.recv()
         # \x00\x05 = error
         # \x00\x04 = permission denied
         self.assertTrue(data.startswith('\x00\x05\x00\x02'))
@@ -182,19 +182,19 @@ class TestFileSystemHandler(TFTPServerTestCase):
         handle.flush()
 
         self.get_file('test.txt')
-        data, addr = self.recv()
+        data, _ = self.recv()
         # \x00\x03 = data
         # \x00\x01 = block id 1
         self.assertEqual(len(data), 516)
         self.assertEqual(data, '\x00\x03\x00\x01' + 'A' * 512)
         self.ack_n(1)
 
-        data, addr = self.recv()
+        data, _ = self.recv()
         self.assertEqual(len(data), 516)
         self.assertEqual(data, '\x00\x03\x00\x02' + 'B' * 512)
 
         # Retransmit. Aknowledge the last packet.
         self.ack_n(1)
-        data, addr = self.recv()
+        data, _ = self.recv()
         self.assertEqual(len(data), 516)
         self.assertEqual(data, '\x00\x03\x00\x02' + 'B' * 512)
