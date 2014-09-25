@@ -33,13 +33,13 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
     ERR_ALREADY_EXISTS = 6
     ERR_NO_SUCH_USER = 7
 
-    def _log(self, level, msg, extra=None):
+    def _log(self, level, msg, extra=None, exc_info=False):
         """ Add client_ip to extra.
         """
         log_extra = {'client_ip': self.client_address[0]}
         if extra:
             log_extra.update(extra)
-        logger.log(level, msg, extra=log_extra)
+        logger.log(level, msg, extra=log_extra, exc_info=exc_info)
 
     def handle(self):
         """ Extract header info and dispatch to handle_* methods.
@@ -113,6 +113,12 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
                 self.send_error(
                     self.ERR_PERM, '%s (%s)' % (err_msg, filename)
                 )
+            return
+        # The file cannot be loaded for any (critical) reason. Log the
+        # traceback.
+        except Exception as exc:
+            self._log(logging.ERROR, 'Internal error', exc_info=True)
+            self.send_error(self.ERR_UNDEFINED, 'Internal error')
             return
 
         self.server.sessions[self.client_address] = TFTPSession(filename, handle)
