@@ -121,7 +121,8 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             self.send_error(self.ERR_UNDEFINED, 'Internal error')
             return
 
-        self.server.sessions[self.client_address] = TFTPSession(filename, handle)
+        self.server.sessions[self.client_address] = TFTPSession(filename,
+                                                                handle)
         self.send_data()
 
     def sanitize_filename(self, filename):
