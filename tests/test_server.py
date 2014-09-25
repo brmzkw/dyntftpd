@@ -7,7 +7,7 @@ import tempfile
 import threading
 import unittest
 
-from dyntftpd.server import TFTPServer, FileSystemHandler
+from dyntftpd.server import TFTPServer, FileSystemHandler, TFTPUDPHandler
 
 
 class ThreadedTFTPServer(SocketServer.ThreadingMixIn, TFTPServer):
@@ -198,3 +198,25 @@ class TestFileSystemHandler(TFTPServerTestCase):
         data, _ = self.recv()
         self.assertEqual(len(data), 516)
         self.assertEqual(data, '\x00\x03\x00\x02' + 'B' * 512)
+
+
+class CustomHandler(TFTPUDPHandler):
+
+    def sanitize_filename(self, filename):
+        return filename
+
+    def load_file(self, filename):
+        raise OSError('xxx')
+
+
+class TestCustomHandler(TFTPServerTestCase):
+
+    def setUp(self):
+        return super(TestCustomHandler, self).setUp(handler=CustomHandler)
+
+    def test_load_file_failing(self):
+        self.get_file('whatever')
+        data, _ = self.recv()
+        # \x00\x05 = error
+        # \x00\x00 = undefined
+        self.assertEqual(data, '\x00\x05\x00\x00Internal error\x00')
