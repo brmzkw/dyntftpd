@@ -216,7 +216,7 @@ class FileSystemHandler(TFTPUDPHandler):
 
 class TFTPServer(SocketServer.UDPServer):
 
-    def __init__(self, host='', port=69, root='/var/lib/tftboot',
+    def __init__(self, host='', port=69, root='/var/lib/tftpboot',
                  handler=FileSystemHandler):
 
         self.sessions = {}
