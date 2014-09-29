@@ -31,15 +31,19 @@ def get_version():
 def get_long_description():
     """ Reads description from README and CHANGES. """
     with open(find_file('README.rst')) as readme, \
-        open(find_file('CHANGES.rst')) as changes:
+            open(find_file('CHANGES.rst')) as changes:
+
         return readme.read() + '\n' + changes.read()
+
+
+VERSION = get_version()
 
 
 setup(
     name=MODULE_NAME,
-    version=get_version(),
+    version=VERSION,
     description='A simple TFTP server',
-    download_url='https://github.com/brmzkw/dyntftpd/tarball/v0.1.0',
+    download_url='https://github.com/brmzkw/dyntftpd/tarball/v' + VERSION,
     long_description=get_long_description(),
     author='Julien Castets',
     author_email='castets.j@gmail.com',
