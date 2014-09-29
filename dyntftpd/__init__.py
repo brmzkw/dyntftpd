@@ -1,7 +1,7 @@
 import logging
 
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 
 # Prevent message "No handlers could be found for logger "dyntftpd"" to be
 # displayed if not logger is setup by the application.
