@@ -5,6 +5,7 @@ Changelog
 ------------------
 
 * Use ThreadingMixin to serve multiple requests at the same time.
+* Accept option blksize.
 
 0.1.1 (2014-09-29)
 ------------------

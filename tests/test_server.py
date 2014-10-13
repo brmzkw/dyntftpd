@@ -115,7 +115,7 @@ class TestFileSystemHandler(TFTPServerTestCase):
         self.ack_n(1)
 
     def test_options(self):
-        """ Ensures options are ignored
+        """ Ensure blksize can be given, and other options are ignored.
 
         http://tools.ietf.org/html/rfc1782
         """
@@ -125,10 +125,8 @@ class TestFileSystemHandler(TFTPServerTestCase):
 
         self.get_file('test.txt', options={'blksize': 1024, 'timeout': 5})
         data, _ = self.recv()
-        # \x00\x03 = data
-        # \x00\x01 = block id 1
-        self.assertEqual(data, '\x00\x03\x00\x01hello world')
-        self.ack_n(1)
+        # \x00\x06 = OACK
+        self.assertEqual(data, '\x00\x06blksize\x001024\x00')
 
     def test_big_file(self):
         handle = open(os.path.join(self.tftp_root, 'test.txt'), 'w+')
@@ -154,6 +152,33 @@ class TestFileSystemHandler(TFTPServerTestCase):
         self.assertEqual(len(data), 36)
         self.assertEqual(data, '\x00\x03\x00\x03' + 'C' * 32)
         self.ack_n(3)
+
+    def test_big_file_with_blksize(self):
+        handle = open(os.path.join(self.tftp_root, 'test.txt'), 'w+')
+        handle.write('A' * 512)
+        handle.write('B' * 512)
+        handle.write('C' * 32)
+        handle.flush()
+
+        self.get_file('test.txt', options={'blksize': 1024})
+
+        # \x00\x06 = OACK
+        data, _ = self.recv()
+        self.assertEqual(data, '\x00\x06blksize\x001024\x00')
+        self.ack_n(0)
+
+        data, _ = self.recv(size=4096)
+        self.assertEqual(len(data), 1024 + 4)
+        # \x00\x03 = data
+        # \x00\x01 = block id 1
+        self.assertEqual(data, '\x00\x03\x00\x01' + 'A' * 512 + 'B' * 512)
+        self.ack_n(1)
+
+        data, _ = self.recv(size=4096)
+        self.assertEqual(len(data), 32 + 4)
+        # \x00\x03 = data
+        # \x00\x01 = block id 2
+        self.assertEqual(data, '\x00\x03\x00\x02' + 'C' * 32)
 
     def test_directory_transversal(self):
         self.get_file('../../yo.txt')

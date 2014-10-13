@@ -22,6 +22,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
     OP_DATA = 3
     OP_ACK = 4
     OP_ERROR = 5
+    OP_OACK = 6
 
     # errors
     ERR_UNDEFINED = 0
@@ -66,8 +67,20 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
                 )
 
             filename, mode = args[0], args[1]
-            # Ignore extra options (if len(args) > 2)
-            self.handle_rrq(filename, mode)
+            options = args[2:]
+
+            # options must be a list like: [optname1, optvalue1, ..., optnameN,
+            # optvalueN)
+            if len(options) % 2:
+                return self.send_error(
+                    self.ERR_ILLEGAL_OPERATION,
+                    "Malformed options"
+                )
+
+            # transform options to a dict
+            options = dict(options[i:i+2] for i in xrange(0, len(options), 2))
+
+            self.handle_rrq(filename, mode, options)
 
         elif opcode == self.OP_ACK:
             block_id, = struct.unpack('!h', data)
@@ -79,7 +92,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
                 'Opcode %d not handled by the server' % opcode
             )
 
-    def handle_rrq(self, filename, mode):
+    def handle_rrq(self, filename, mode, options):
         """ Handle READ requests.
 
         Create a new session.
@@ -121,8 +134,25 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             self.send_error(self.ERR_UNDEFINED, 'Internal error')
             return
 
-        self.server.sessions[self.client_address] = TFTPSession(filename,
-                                                                handle)
+        session =  TFTPSession(filename, handle)
+        self.server.sessions[self.client_address] = session
+
+        # If there is a supported option, return a OACK, otherwise return the
+        # first packet.
+        # For now, only 'blksize' is supported.
+        blksize = options.get('blksize')
+
+        # Set the block size and return a OACK
+        if blksize:
+            try:
+                session.blksize = int(blksize)
+            except ValueError:  # not an int
+                return self.send_error(
+                    self.ERR_ILLEGAL_OPERATION, 'Bad option value'
+                )
+            return self.send_oack(blksize=blksize)
+
+        # No options, return the first part of the file
         self.send_data()
 
     def sanitize_filename(self, filename):
@@ -166,13 +196,23 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         # error
         self.send_data()
 
+    def send_oack(self, **options):
+        """ Send options acknowledgement.
+        """
+        packed = struct.pack('!h', self.OP_OACK)
+        for key, value in options.iteritems():
+            packed += key + '\x00' + value + '\x00'
+
+        socket = self.request[1]
+        socket.sendto(packed, self.client_address)
+
     def send_data(self):
         """ Send the next data packet to the client.
         """
         session = self.server.sessions[self.client_address]
-        session.handle.seek(session.block_id * 512)
-        data = session.handle.read(512)
-        session.last_read_is_eof = len(data) < 512
+        session.handle.seek(session.block_id * session.blksize)
+        data = session.handle.read(session.blksize)
+        session.last_read_is_eof = len(data) < session.blksize
 
         packed = struct.pack('!hh', self.OP_DATA, session.block_id + 1)
         packed += data
@@ -197,6 +237,7 @@ class TFTPSession(object):
         self.filename = filename
         self.handle = handle
         self.last_read_is_eof = False
+        self.blksize = 512
 
 
 class FileSystemHandler(TFTPUDPHandler):
