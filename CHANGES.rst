@@ -4,7 +4,7 @@ Changelog
 0.1.2 (unreleased)
 ------------------
 
-* No entry.
+* Use ThreadingMixin to serve multiple requests at the same time.
 
 0.1.1 (2014-09-29)
 ------------------

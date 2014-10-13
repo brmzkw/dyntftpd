@@ -214,7 +214,7 @@ class FileSystemHandler(TFTPUDPHandler):
         return open(filename)
 
 
-class TFTPServer(SocketServer.UDPServer):
+class TFTPServer(SocketServer.ThreadingMixIn, SocketServer.UDPServer):
 
     def __init__(self, host='', port=69, root='/var/lib/tftpboot',
                  handler=FileSystemHandler):
