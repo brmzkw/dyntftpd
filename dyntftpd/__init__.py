@@ -4,7 +4,7 @@ import logging
 __version__ = '0.2.1'
 
 # Prevent message "No handlers could be found for logger "dyntftpd"" to be
-# displayed if not logger is setup by the application.
+# displayed
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
