@@ -7,7 +7,9 @@ import tempfile
 import threading
 import unittest
 
-from dyntftpd.server import TFTPServer, FileSystemHandler, TFTPUDPHandler
+from dyntftpd.handlers import TFTPUDPHandler
+from dyntftpd.handlers.fs import FileSystemHandler
+from dyntftpd.server import TFTPServer
 
 
 class ThreadedTFTPServer(SocketServer.ThreadingMixIn, TFTPServer):
