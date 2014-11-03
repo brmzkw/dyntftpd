@@ -1,3 +1,6 @@
+""" Test TFTPServer and default handler (FileSystemHandler).
+"""
+
 import SocketServer
 import os
 import shutil
@@ -12,10 +15,6 @@ from dyntftpd.handlers.fs import FileSystemHandler
 from dyntftpd.server import TFTPServer
 
 
-class ThreadedTFTPServer(SocketServer.ThreadingMixIn, TFTPServer):
-    pass
-
-
 class TFTPServerTestCase(unittest.TestCase):
 
     def setUp(self, handler=FileSystemHandler):
@@ -23,7 +22,7 @@ class TFTPServerTestCase(unittest.TestCase):
         """
         self.tftp_root = tempfile.mkdtemp()
 
-        self.server = ThreadedTFTPServer(
+        self.server = TFTPServer(
             host='127.0.0.1', port=0, root=self.tftp_root, handler=handler
         )
         self.listen_ip, self.listen_port = self.server.socket.getsockname()
