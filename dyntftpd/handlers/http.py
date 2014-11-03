@@ -15,27 +15,38 @@ class HTTPHandler(TFTPUDPHandler):
     (like a bootloader like u-boot, for example).
     """
 
+    def get_config(self, name, default):
+        """ Fetchs `name` in handler arguments, or return `default`.
+        """
+        sentinel = object()
+        config = self.server.handler_args.get('http', {}).get(name, sentinel)
+        if config is sentinel:
+            return default
+        return config
+
     def sanitize_filename(self, filename):
         """ Cient needs to urlencode the filename he wants to request.
         """
         return urllib.unquote(filename)
 
-    def load_file(self, filename, local_dir='/tmp/tftpcache'):
-        """ Downloads `filename` to `local_dir`, and returns the local file.
+    def load_file(self, filename):
+        """ Downloads `filename` to the cache directory, and return the cached
+        file.
         """
         self._log(logging.INFO, 'Downloading %s' % filename)
 
-        # Create local file where remote file is stored
-        safe_name = base64.b64encode(filename)
-        local_filename = os.path.join(local_dir, safe_name)
-        local_file = open(local_filename, 'w+')
-
-        # Create local_dir if doesn't already exist
+        # Create cache directory if doesn't already exist
+        cache_dir = self.get_config('cache_dir', '/tmp/tftpcache')
         try:
-            os.makedirs(local_dir)
+            os.makedirs(cache_dir)
         except OSError as exc:
             if exc.errno != errno.EEXIST:
                 raise
+
+        # Create local file where remote file is stored
+        safe_name = base64.b64encode(filename)
+        local_filename = os.path.join(cache_dir, safe_name)
+        local_file = open(local_filename, 'w+')
 
         # Download `filename` to `local_file`
         try:
