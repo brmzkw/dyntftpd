@@ -42,8 +42,26 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             log_extra.update(extra)
         logger.log(level, msg, extra=log_extra, exc_info=exc_info)
 
+    def get_current_session(self):
+        """ Gets the client's session, or returns None.
+        """
+        return self.server.sessions.get(self.client_address)
+
+    def set_current_session(self, session):
+        """ Sets the session for this client to `session`.
+        """
+        self.server.sessions[self.client_address] = session
+
+    def clean_current_session(self):
+        """ Deletes the current session.
+
+        Further calls to get_current_session will return None.
+        """
+        del self.server.sessions[self.client_address]
+
     def handle(self):
-        """ Extract header info and dispatch to handle_* methods.
+        """ Called when data are received. Extract header info and dispatch to
+        handle_* methods.
         """
         data = self.request[0]
         opcode, = struct.unpack('!h', data[0:2])
@@ -134,8 +152,8 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             self.send_error(self.ERR_UNDEFINED, 'Internal error')
             return
 
-        session =  TFTPSession(filename, handle)
-        self.server.sessions[self.client_address] = session
+        session = TFTPSession(filename, handle)
+        self.set_current_session(session)
 
         # If there is a supported option, return a OACK, otherwise return the
         # first packet.
@@ -171,7 +189,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         next packet to send.
         """
         self._log(logging.DEBUG, 'ACK (block %s)' % block_id)
-        session = self.server.sessions.get(self.client_address)
+        session = self.get_current_session()
 
         # If the ACK does not correspond to a read request
         if not session:
@@ -186,7 +204,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
                     logging.INFO,
                     'Transfer of %s successful' % session.filename
                 )
-                del self.server.sessions[self.client_address]
+                self.clean_current_session()
                 return
 
             # Next packet
@@ -209,7 +227,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
     def send_data(self):
         """ Send the next data packet to the client.
         """
-        session = self.server.sessions[self.client_address]
+        session = self.get_current_session()
         session.handle.seek(session.block_id * session.blksize)
         data = session.handle.read(session.blksize)
         session.last_read_is_eof = len(data) < session.blksize
