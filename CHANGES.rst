@@ -4,7 +4,7 @@ Changelog
 0.2.1 (unreleased)
 ------------------
 
-* No entry.
+* Create HTTPHandler.
 
 0.2.0 (2014-10-13)
 ------------------

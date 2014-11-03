@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 MODULE_NAME = 'dyntftpd'
 
-DEPENDENCIES = []
+DEPENDENCIES = ['requests']
 TEST_DEPENDENCIES = []
 
 

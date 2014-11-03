@@ -6,6 +6,7 @@ A simple, extendable Python implementation of a TFTP server.
 Features:
 
 - Easily customizable (override dyntftpd.TFTPServer or dyntftpd.FileSystemHandler)
+- Can serve files only available by HTTP
 - Code is mostly unit tested and easy to read
 
 Limitations:
