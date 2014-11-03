@@ -1,5 +1,6 @@
 import argparse
 import logging
+import logging.config
 
 from .server import TFTPServer
 
@@ -24,10 +25,39 @@ def main():
     args = parser.parse_args()
 
     log_level = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(
-        level=log_level,
-        format='[%(asctime)-15s] %(client_ip)s: %(message)s'
-    )
+    logging.config.dictConfig({
+        'version': 1,
+        'disable_existing_loggers': False,
+
+        'formatters': {
+            'with_client_ip': {
+                'format': '[%(asctime)-15s] %(client_ip)s: %(message)s'
+            }
+        },
+
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+            },
+            'console_with_client_ip': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'with_client_ip',
+            }
+        },
+
+        'loggers': {
+            '': {
+                'handlers': ['console'],
+                'level': log_level
+            },
+
+            'dyntftpd': {
+                'handlers': ['console_with_client_ip'],
+                'propagate': False,
+                'level': log_level
+            }
+        }
+    })
 
     tftp_server = TFTPServer(args.host, args.port, root=args.root)
     tftp_server.serve_forever()
