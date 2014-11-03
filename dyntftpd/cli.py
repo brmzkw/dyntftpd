@@ -31,7 +31,8 @@ def main():
 
         'formatters': {
             'with_client_ip': {
-                'format': '[%(asctime)-15s] %(client_ip)s: %(message)s'
+                'format': '[%(asctime)-15s] %(levelname)s '
+                          '%(client_ip)s: %(message)s'
             }
         },
 
