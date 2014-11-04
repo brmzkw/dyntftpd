@@ -12,7 +12,7 @@ from . import TFTPUDPHandler
 
 class HTTPHandler(TFTPUDPHandler):
     """ Serve HTTP files by TFTP for clients that don't have a HTTP client
-    (like a bootloader like u-boot, for example).
+    (a bootloader like u-boot, for example).
     """
 
     def get_config(self, name, default):
