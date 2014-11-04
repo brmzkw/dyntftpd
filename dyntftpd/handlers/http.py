@@ -3,6 +3,7 @@ import contextlib
 import errno
 import logging
 import os
+import re
 import time
 import urllib
 
@@ -33,13 +34,22 @@ class HTTPHandler(TFTPUDPHandler):
     def _download(self, filename):
         """ Downloads `filename` and yield its content block by block.
 
-        To limit DoS, a timeout and a filesize limit are set.
+        To limit DoS, a timeout and a filesize limit are set, redirections are
+        denied, and it is possible to set a whitelist of sites where downloads
+        are authorized.
         """
         timeout = self.get_config('timeout', 3)
         maxsize = self.get_config('maxsize', 1000000 * 50)  # 50M
         requests_kwargs = self.get_config('requests_kwargs', {
             'allow_redirects': False
         })
+        whitelist = self.get_config('whitelist', [r'.*'])
+
+        for domain in whitelist:
+            if re.match(domain, filename):
+                break
+        else:
+            raise IOError('Forbidden domain (not whitelisted)')
 
         start_time = time.time()
 
