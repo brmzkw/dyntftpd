@@ -64,8 +64,10 @@ class HTTPHandler(TFTPUDPHandler):
                 size += 8192
 
                 if time.time() > start_time + timeout:
-                    raise IOError('%s took more than %s seconds to download. '
-                                  'Abort.' % ( filename, timeout))
+                    raise IOError(
+                        '%s took more than %s seconds to download. Abort.' % (
+                            filename, timeout
+                        ))
 
                 if size > maxsize:
                     raise IOError('Failed to download %s. '
