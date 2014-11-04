@@ -232,7 +232,15 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         data = session.handle.read(session.blksize)
         session.last_read_is_eof = len(data) < session.blksize
 
-        packed = struct.pack('!hh', self.OP_DATA, session.block_id + 1)
+        try:
+            packed = struct.pack('!hh', self.OP_DATA, session.block_id + 1)
+        except struct.error as exc:
+            self.send_error(
+                self.ERR_UNDEFINED,
+                'File too big for this blksize. block id overflows.'
+            )
+            return
+
         packed += data
 
         socket = self.request[1]
