@@ -73,3 +73,28 @@ class TestHTTPHandler(TFTPServerTestCase):
         # \x00\x05 = error
         # \x00\x04 = permission denied
         self.assertTrue(data.startswith('\x00\x05\x00\x02'))
+
+
+class TestHTTPHandlerWithTimeout(TFTPServerTestCase):
+
+    def setUp(self):
+        self.cache_dir = tempfile.mkdtemp()
+        return super(TestHTTPHandlerWithTimeout, self).setUp(
+            handler=HTTPHandler, handler_args={
+                'http': {
+                    'cache_dir': self.cache_dir,
+                    'timeout': 0.001
+                }
+            })
+
+    def tearDown(self):
+        shutil.rmtree(self.cache_dir)
+        super(TestHTTPHandlerWithTimeout, self).tearDown()
+
+    def test_timeout(self):
+        with HTTMock(get_small_file) as mock:
+            self.get_file('http://www.download.tld/superfile')
+            data, _ = self.recv()
+            # \x00\x05 = error
+            # \x00\x04 = permission denied
+            self.assertTrue(data.startswith('\x00\x05\x00\x02'))
