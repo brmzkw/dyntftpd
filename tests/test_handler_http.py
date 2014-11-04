@@ -12,6 +12,10 @@ def get_small_file(url, request):
     return 'small file'
 
 
+def bigger_than_max_size(url, request):
+    return 'x' * 2000
+
+
 def get_404(url, request):
     return {
         'status_code': 404,
@@ -27,7 +31,8 @@ class TestHTTPHandler(TFTPServerTestCase):
             handler=HTTPHandler, handler_args={
                 'http': {
                     'cache_dir': self.cache_dir,
-                    'whitelist': ['http://www.download.tld']
+                    'whitelist': ['http://www.download.tld'],
+                    'maxsize': 1000
                 }
             })
 
@@ -46,6 +51,14 @@ class TestHTTPHandler(TFTPServerTestCase):
 
     def test_404(self):
         with HTTMock(get_404) as mock:
+            self.get_file('http://www.download.tld/superfile')
+            data, _ = self.recv()
+            # \x00\x05 = error
+            # \x00\x04 = permission denied
+            self.assertTrue(data.startswith('\x00\x05\x00\x02'))
+
+    def test_maxsize(self):
+        with HTTMock(bigger_than_max_size) as mock:
             self.get_file('http://www.download.tld/superfile')
             data, _ = self.recv()
             # \x00\x05 = error

@@ -71,7 +71,7 @@ class HTTPHandler(TFTPUDPHandler):
             for data in res.iter_content(chunk_size=8192):
                 yield data
 
-                size += 8192
+                size += len(data)
 
                 if time.time() > start_time + timeout:
                     raise IOError(
