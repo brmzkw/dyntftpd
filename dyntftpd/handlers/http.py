@@ -37,12 +37,20 @@ class HTTPHandler(TFTPUDPHandler):
         """
         timeout = self.get_config('timeout', 3)
         maxsize = self.get_config('maxsize', 1000000 * 50)  # 50M
+        requests_kwargs = self.get_config('requests_kwargs', {
+            'allow_redirects': False
+        })
 
         start_time = time.time()
 
         with contextlib.closing(
-            requests.get(filename, stream=True, timeout=timeout)
+            requests.get(filename, stream=True, timeout=timeout,
+                         **requests_kwargs)
         ) as res:
+
+            # only be true if redirection and allow_redirects is False
+            if 300 <= res.status_code <= 400:
+                raise IOError('Redirections are forbidden. Download aborted.')
 
             if not res.ok:
                 raise IOError('GET %s returned HTTP/%s' % (filename,
