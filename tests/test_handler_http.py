@@ -26,7 +26,8 @@ class TestHTTPHandler(TFTPServerTestCase):
         return super(TestHTTPHandler, self).setUp(
             handler=HTTPHandler, handler_args={
                 'http': {
-                    'cache_dir': self.cache_dir
+                    'cache_dir': self.cache_dir,
+                    'whitelist': ['http://www.download.tld']
                 }
             })
 
@@ -50,3 +51,12 @@ class TestHTTPHandler(TFTPServerTestCase):
             # \x00\x05 = error
             # \x00\x04 = permission denied
             self.assertTrue(data.startswith('\x00\x05\x00\x02'))
+
+    def test_whitelist(self):
+        """ If whitelist is not satisfied, no HTTP request is done.
+        """
+        self.get_file('http://www.forbidden.com/superfile')
+        data, _ = self.recv()
+        # \x00\x05 = error
+        # \x00\x04 = permission denied
+        self.assertTrue(data.startswith('\x00\x05\x00\x02'))
