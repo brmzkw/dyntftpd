@@ -3,6 +3,7 @@ import contextlib
 import errno
 import logging
 import os
+import time
 import urllib
 
 import requests
@@ -29,6 +30,39 @@ class HTTPHandler(TFTPUDPHandler):
         """
         return urllib.unquote(filename)
 
+    def _download(self, filename):
+        """ Downloads `filename` and yield its content block by block.
+
+        To limit DoS, a timeout and a filesize limit are set.
+        """
+        timeout = self.get_config('timeout', 3)
+        maxsize = self.get_config('maxsize', 1000000 * 50)  # 50M
+
+        start_time = time.time()
+
+        with contextlib.closing(
+            requests.get(filename, stream=True, timeout=timeout)
+        ) as res:
+
+            if not res.ok:
+                raise IOError('GET %s returned HTTP/%s' % (filename,
+                                                           res.status_code))
+
+            size = 0
+
+            for data in res.iter_content(chunk_size=8192):
+                yield data
+
+                size += 8192
+
+                if time.time() > start_time + timeout:
+                    raise IOError('%s took more than %s seconds to download. '
+                                  'Abort.' % ( filename, timeout))
+
+                if size > maxsize:
+                    raise IOError('Failed to download %s. '
+                                  'More than %s bytes.' % (filename, size))
+
     def load_file(self, filename):
         """ Downloads `filename` to the cache directory, and return the cached
         file.
@@ -50,17 +84,8 @@ class HTTPHandler(TFTPUDPHandler):
 
         # Download `filename` to `local_file`
         try:
-            with contextlib.closing(
-                requests.get(filename, stream=True)
-            ) as res:
-
-                if not res.ok:
-                    raise IOError('GET %s returned HTTP/%s' % (
-                        filename, res.status_code
-                    ))
-
-                for block in res.iter_content(4096):
-                    local_file.write(block)
+            for block in self._download(filename):
+                local_file.write(block)
 
         # Clean if there was an error
         except IOError as exc:
