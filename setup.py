@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 MODULE_NAME = 'dyntftpd'
 
 DEPENDENCIES = ['requests']
-TEST_DEPENDENCIES = []
+TEST_DEPENDENCIES = ['httmock']
 
 
 def find_file(*paths):

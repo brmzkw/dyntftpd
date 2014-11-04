@@ -11,13 +11,14 @@ from dyntftpd.server import TFTPServer
 
 class TFTPServerTestCase(unittest.TestCase):
 
-    def setUp(self, handler=FileSystemHandler):
+    def setUp(self, handler=FileSystemHandler, handler_args=None):
         """ Starts an instance of TFTPServer and initializes a client socket.
         """
         self.tftp_root = tempfile.mkdtemp()
 
         self.server = TFTPServer(
-            host='127.0.0.1', port=0, root=self.tftp_root, handler=handler
+            host='127.0.0.1', port=0, root=self.tftp_root,
+            handler=handler, handler_args=handler_args
         )
         self.listen_ip, self.listen_port = self.server.socket.getsockname()
 
