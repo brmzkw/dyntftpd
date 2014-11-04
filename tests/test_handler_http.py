@@ -23,11 +23,12 @@ class TestHTTPHandler(TFTPServerTestCase):
 
     def setUp(self):
         self.cache_dir = tempfile.mkdtemp()
-        return super(TestHTTPHandler, self).setUp(handler=HTTPHandler, handler_args={
-            'http': {
-                'cache_dir': self.cache_dir
-            }
-        })
+        return super(TestHTTPHandler, self).setUp(
+            handler=HTTPHandler, handler_args={
+                'http': {
+                    'cache_dir': self.cache_dir
+                }
+            })
 
     def tearDown(self):
         shutil.rmtree(self.cache_dir)
