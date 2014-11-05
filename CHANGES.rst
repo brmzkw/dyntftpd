@@ -5,6 +5,8 @@ Changelog
 ------------------
 
 * Create HTTPHandler.
+* Create CleverHandler to dispatch to HTTPHandler or FileSystemHandler
+  depending on the requested file.
 
 0.2.0 (2014-10-13)
 ------------------
