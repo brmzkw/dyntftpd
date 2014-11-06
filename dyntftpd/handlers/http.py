@@ -90,7 +90,9 @@ class HTTPHandler(TFTPUDPHandler):
         self._log(logging.INFO, 'Downloading %s' % filename)
 
         # Create cache directory if doesn't already exist
-        cache_dir = self.get_config('cache_dir', '/tmp/tftpcache')
+        cache_dir = self.get_config(
+            'cache_dir', '/var/cache/dyntftpd/handlers/http'
+        )
         try:
             os.makedirs(cache_dir)
         except OSError as exc:
