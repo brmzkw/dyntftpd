@@ -177,12 +177,12 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         """ Compute a filename that can be loaded by load_file. Make security
         checks to prevent path transversal.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def load_file(self, filename):
         """ Return a FILE like object.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def handle_ack(self, block_id):
         """ Client has aknowledged a block id. Can be a retransmission or the
