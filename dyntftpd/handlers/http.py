@@ -111,17 +111,12 @@ class HTTPHandler(TFTPUDPHandler):
 
         # Clean if there was an error
         except IOError as exc:
-            # Local file is empty, remove it
-            if not local_file.tell():
-                os.unlink(local_filename)
-
             # Local file partially written, display a message for investigation
-            else:
-                self._log(
-                    logging.ERROR,
-                    'Error while downloading %s. Downloaded content has been '
-                    'stored to %s' % (filename, local_filename), exc_info=True
-                )
+            self._log(
+                logging.ERROR,
+                'Error while downloading %s. Downloaded content has been '
+                'stored to %s' % (filename, local_filename), exc_info=True
+            )
 
             local_file.close()
             raise
