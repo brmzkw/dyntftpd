@@ -1,2 +1,3 @@
 include CHANGES.rst
 include MANIFEST.in
+include setup.cfg
