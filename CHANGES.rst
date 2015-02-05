@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.3.0 (unreleased)
+0.3.0 (2015-02-05)
 ------------------
 
 * Add unload_file callback in TFTPUDPHandler, called when the transfer of a
