@@ -130,3 +130,10 @@ class HTTPHandler(TFTPUDPHandler):
         ))
 
         return local_file
+
+    def unload_file(self):
+        """ The file has been successfully downloaded by the client, remove it
+        from the cache.
+        """
+        session = self.get_current_session()
+        os.unlink(session.handle.name)

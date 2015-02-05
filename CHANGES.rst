@@ -6,6 +6,7 @@ Changelog
 
 * Add unload_file callback in TFTPUDPHandler, called when the transfer of a
   file is over and successful.
+* Remove cache files for successful transfers in HTTPHandler.
 
 0.2.1 (2014-11-06)
 ------------------
