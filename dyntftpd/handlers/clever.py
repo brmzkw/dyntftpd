@@ -17,8 +17,7 @@ class CleverHandler(FileSystemHandler, HTTPHandler):
         return False
 
     def sanitize_filename(self, filename):
-        """ Fowards to HTTPHandler.sanitize_filename() if `filename` is a URL, else to
-        FileSystemhandler.sanitize_filename().
+        """ Forwards to HTTPHandler or to FileSystemHandler.
         """
         maybe_url = HTTPHandler.sanitize_filename(self, filename)
 
@@ -28,8 +27,7 @@ class CleverHandler(FileSystemHandler, HTTPHandler):
         return FileSystemHandler.sanitize_filename(self, filename)
 
     def load_file(self, filename):
-        """ Fowards to HTTPHandler.load_file() if `filename` is a URL, else to
-        FileSystemhandler.load_file().
+        """ Forwards to HTTPHandler or to FileSystemHandler.
         """
         if self.for_http_handler(filename):
             return HTTPHandler.load_file(self, filename)
