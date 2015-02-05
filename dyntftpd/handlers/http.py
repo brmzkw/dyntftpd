@@ -58,7 +58,7 @@ class HTTPHandler(TFTPUDPHandler):
                          **requests_kwargs)
         ) as res:
 
-            # only be true if redirection and allow_redirects is False
+            # can only be true if redirection and allow_redirects is False
             if 300 <= res.status_code <= 400:
                 raise IOError('Redirections are forbidden. Download aborted.')
 
