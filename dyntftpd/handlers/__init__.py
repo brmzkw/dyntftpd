@@ -184,6 +184,12 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         """
         raise NotImplementedError
 
+    def unload_file(self):
+        """ Called when the file has been successfully downloaded by the
+        client.
+        """
+        return
+
     def handle_ack(self, block_id):
         """ Client has aknowledged a block id. Can be a retransmission or the
         next packet to send.
@@ -204,6 +210,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
                     logging.INFO,
                     'Transfer of %s successful' % session.filename
                 )
+                self.unload_file()
                 self.clean_current_session()
                 return
 

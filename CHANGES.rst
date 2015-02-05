@@ -4,7 +4,8 @@ Changelog
 0.2.2 (unreleased)
 ------------------
 
-* No entry.
+* Add unload_file callback in TFTPUDPHandler, called when the transfer of a
+  file is over and successful.
 
 0.2.1 (2014-11-06)
 ------------------

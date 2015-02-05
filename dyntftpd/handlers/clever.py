@@ -32,3 +32,12 @@ class CleverHandler(FileSystemHandler, HTTPHandler):
         if self.for_http_handler(filename):
             return HTTPHandler.load_file(self, filename)
         return FileSystemHandler.load_file(self, filename)
+
+    def unload_file(self):
+        """ Forwards to HTTPHandler or to FileSystemHandler.
+        """
+        session = self.get_current_session()
+
+        if self.for_http_handler(session.filename):
+            return HTTPHandler.unload_file(self)
+        return FileSystemHandler.unload_file(self)
