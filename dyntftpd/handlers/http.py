@@ -100,7 +100,11 @@ class HTTPHandler(TFTPUDPHandler):
                 raise
 
         # Create local file where remote file is stored
-        safe_name = base64.b64encode(filename)
+        safe_name = '%s_%s_%s' % (
+            base64.b64encode(filename),
+            self.client_address[0],
+            time.time()
+        )
         local_filename = os.path.join(cache_dir, safe_name)
         local_file = open(local_filename, 'w+')
 
