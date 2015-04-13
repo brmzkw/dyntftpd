@@ -204,7 +204,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         # Last packet was received
         if block_id == session.block_id + 1:
 
-            # Final ACK from the client, kill the sesssion
+            # Final ACK from the client, kill the session
             if session.last_read_is_eof:
                 self._log(
                     logging.INFO,
