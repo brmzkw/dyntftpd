@@ -37,7 +37,10 @@ class TestHTTPHandler(TFTPServerTestCase):
             })
 
     def tearDown(self):
-        shutil.rmtree(self.cache_dir)
+        try:
+            shutil.rmtree(self.cache_dir)
+        except OSError:
+            pass
         super(TestHTTPHandler, self).tearDown()
 
     def test_retrieve_file(self):
