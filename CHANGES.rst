@@ -4,7 +4,8 @@ Changelog
 0.3.1 (unreleased)
 ------------------
 
-* No entry... yet.
+* In HTTP handler, the cache filename contains client's source port and human
+  readable datetime, making debugging easier.
 
 0.3.0 (2015-02-05)
 ------------------

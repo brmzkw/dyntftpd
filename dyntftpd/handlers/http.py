@@ -1,5 +1,6 @@
 import base64
 import contextlib
+import datetime
 import errno
 import logging
 import os
@@ -100,10 +101,11 @@ class HTTPHandler(TFTPUDPHandler):
                 raise
 
         # Create local file where remote file is stored
-        safe_name = '%s_%s_%s' % (
+        safe_name = '%s_%s_%s_%s' % (
             base64.b64encode(filename),
             self.client_address[0],
-            time.time()
+            self.client_address[1],
+            datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
         )
         local_filename = os.path.join(cache_dir, safe_name)
         local_file = open(local_filename, 'w+')
