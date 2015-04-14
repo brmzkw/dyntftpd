@@ -44,3 +44,9 @@ class TestCleverHandler(TFTPServerTestCase):
         # \x00\x01 = block id 1
         self.assertEqual(data, '\x00\x03\x00\x01fs')
         self.ack_n(1)
+
+    def test_invalid_request(self):
+        # Not enough arguments
+        self.send('\x00\x01')
+        data, _ = self.recv()
+        self.assertTrue(data.startswith('\x00\x05\x00\x04'))

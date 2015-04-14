@@ -138,4 +138,5 @@ class HTTPHandler(TFTPUDPHandler):
         from the cache.
         """
         session = self.get_current_session()
-        os.unlink(session.handle.name)
+        if session:
+            os.unlink(session.handle.name)

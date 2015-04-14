@@ -53,11 +53,16 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         self.server.sessions[self.client_address] = session
 
     def clean_current_session(self):
-        """ Deletes the current session.
+        """ Deletes the current session, if exists.
 
         Further calls to get_current_session will return None.
         """
-        del self.server.sessions[self.client_address]
+        self.unload_file()
+
+        try:
+            del self.server.sessions[self.client_address]
+        except KeyError:
+            pass
 
     def handle(self):
         """ Called when data are received. Extract header info and dispatch to
@@ -210,7 +215,6 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
                     logging.INFO,
                     'Transfer of %s successful' % session.filename
                 )
-                self.unload_file()
                 self.clean_current_session()
                 return
 
@@ -261,6 +265,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         packed = struct.pack('!hh', self.OP_ERROR, error_code)
         packed += error_msg + '\x00'
         socket.sendto(packed, self.client_address)
+        self.clean_current_session()
 
 
 class TFTPSession(object):

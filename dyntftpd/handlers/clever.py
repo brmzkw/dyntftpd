@@ -35,8 +35,14 @@ class CleverHandler(FileSystemHandler, HTTPHandler):
 
     def unload_file(self):
         """ Forwards to HTTPHandler or to FileSystemHandler.
+
+        If there's no current session, which happens when the client makes a
+        bad request for example, do nothing.
         """
         session = self.get_current_session()
+
+        if not session:
+            return
 
         if self.for_http_handler(session.filename):
             return HTTPHandler.unload_file(self)

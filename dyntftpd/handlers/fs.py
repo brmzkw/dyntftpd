@@ -16,3 +16,8 @@ class FileSystemHandler(TFTPUDPHandler):
 
     def load_file(self, filename):
         return open(filename)
+
+    def unload_file(self):
+        session = self.get_current_session()
+        if session:
+            session.handle.close()
