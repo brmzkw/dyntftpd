@@ -3,7 +3,7 @@ import SocketServer
 from .handlers.fs import FileSystemHandler
 
 
-class TFTPServer(SocketServer.ThreadingMixIn, SocketServer.UDPServer):
+class TFTPServer(SocketServer.UDPServer):
     """ Accepts the same arguments than SocketServer.UDPServer.
 
     Can also provide `handler_args`, a dictionary used by handlers to lookup
