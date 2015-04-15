@@ -1,6 +1,6 @@
 import SocketServer
 
-from .handlers.fs import FileSystemHandler
+from .handlers.clever import CleverHandler
 
 
 class TFTPServer(SocketServer.UDPServer):
@@ -10,7 +10,7 @@ class TFTPServer(SocketServer.UDPServer):
     their configuration.
     """
     def __init__(self, host='', port=69, root='/var/lib/tftpboot',
-                 handler=FileSystemHandler, handler_args=None):
+                 handler=CleverHandler, handler_args=None):
 
         self.sessions = {}
         self.root = root

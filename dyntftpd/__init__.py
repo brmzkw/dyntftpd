@@ -8,4 +8,8 @@ __version__ = '0.4.0'
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-from .server import TFTPServer, FileSystemHandler
+from .server import TFTPServer
+
+from .handlers.clever import CleverHandler
+from .handlers.fs import FileSystemHandler
+from .handlers.http import HTTPHandler

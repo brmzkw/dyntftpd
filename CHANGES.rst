@@ -8,6 +8,7 @@ Changelog
   readable datetime, making debugging easier.
 * We no longer create a thread for each request.
 * API break: move load_file and unload_file from TFTP handlers to Session.
+* Use CleverHandler instead of FileSystemHandler by default.
 
 0.3.0 (2015-02-05)
 ------------------
