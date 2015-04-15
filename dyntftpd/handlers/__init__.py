@@ -9,6 +9,26 @@ import SocketServer
 logger = logging.getLogger(__name__)
 
 
+class TFTPSession(object):
+    """ Represents a file transfert for a client.
+
+    Subclasses must initialize `handle` in the __init__ method.
+    """
+    def __init__(self, tftp_handler, filename):
+        self.tftp_handler = tftp_handler
+        self.filename = filename
+        self.handle = None
+        self.block_id = 0
+        self.last_read_is_eof = False
+        self.blksize = 512
+
+    def load_file(self):
+        raise NotImplementedError
+
+    def unload_file(self):
+        raise NotImplementedError
+
+
 class TFTPUDPHandler(SocketServer.BaseRequestHandler):
     """ Mixin. Implementation of the TFTP protocol.
 
@@ -52,12 +72,14 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         """
         self.server.sessions[self.client_address] = session
 
-    def clean_current_session(self):
+    def cleanup_session(self):
         """ Deletes the current session, if exists.
 
         Further calls to get_current_session will return None.
         """
-        self.unload_file()
+        session = self.get_current_session()
+        if session:
+            session.unload_file()
 
         try:
             del self.server.sessions[self.client_address]
@@ -136,7 +158,8 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             return
 
         try:
-            handle = self.load_file(filename)
+            session = self.session_cls(self, filename)
+            self.set_current_session(session)
         except IOError as exc:
             # If ENOENT, consider the file is missing. Otherwise, consider we
             # don't have the permission to read it.
@@ -156,9 +179,6 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             self._log(logging.ERROR, 'Internal error', exc_info=True)
             self.send_error(self.ERR_UNDEFINED, 'Internal error')
             return
-
-        session = TFTPSession(filename, handle)
-        self.set_current_session(session)
 
         # If there is a supported option, return a OACK, otherwise return the
         # first packet.
@@ -184,17 +204,6 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         """
         raise NotImplementedError
 
-    def load_file(self, filename):
-        """ Return a FILE like object.
-        """
-        raise NotImplementedError
-
-    def unload_file(self):
-        """ Called when the file has been successfully downloaded by the
-        client.
-        """
-        return
-
     def handle_ack(self, block_id):
         """ Client has aknowledged a block id. Can be a retransmission or the
         next packet to send.
@@ -215,7 +224,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
                     logging.INFO,
                     'Transfer of %s successful' % session.filename
                 )
-                self.clean_current_session()
+                self.cleanup_session()
                 return
 
             # Next packet
@@ -265,14 +274,4 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         packed = struct.pack('!hh', self.OP_ERROR, error_code)
         packed += error_msg + '\x00'
         socket.sendto(packed, self.client_address)
-        self.clean_current_session()
-
-
-class TFTPSession(object):
-
-    def __init__(self, filename, handle):
-        self.block_id = 0
-        self.filename = filename
-        self.handle = handle
-        self.last_read_is_eof = False
-        self.blksize = 512
+        self.cleanup_session()

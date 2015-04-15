@@ -10,27 +10,72 @@ import urllib
 
 import requests
 
-from . import TFTPUDPHandler
+from . import TFTPUDPHandler, TFTPSession
 
 
-class HTTPHandler(TFTPUDPHandler):
-    """ Serve HTTP files by TFTP for clients that don't have a HTTP client
-    (a bootloader like u-boot, for example).
-    """
+class Session(TFTPSession):
+
+    def __init__(self, tftp_handler, filename):
+        """ Downloads `filename` to the cache directory, and return the cached
+        file.
+        """
+        super(Session, self).__init__(tftp_handler, filename)
+        self.tftp_handler._log(logging.INFO, 'Downloading %s' % filename)
+
+        # Create cache directory if doesn't already exist
+        cache_dir = self.get_config(
+            'cache_dir', '/var/cache/dyntftpd/handlers/http'
+        )
+        try:
+            os.makedirs(cache_dir)
+        except OSError as exc:
+            if exc.errno != errno.EEXIST:
+                raise
+
+        # Create local file where remote file is stored
+        safe_name = '%s_%s_%s_%s' % (
+            base64.b64encode(filename),
+            self.tftp_handler.client_address[0],
+            self.tftp_handler.client_address[1],
+            datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+        )
+        local_filename = os.path.join(cache_dir, safe_name)
+        local_file = open(local_filename, 'w+')
+
+        # Download `filename` to `local_file`
+        try:
+            for block in self._download(filename):
+                local_file.write(block)
+
+        # Clean if there was an error
+        except IOError as exc:
+            # Local file partially written, display a message for investigation
+            self.tftp_handler._log(
+                logging.ERROR,
+                'Error while downloading %s. Downloaded content has been '
+                'stored to %s' % (filename, local_filename), exc_info=True
+            )
+
+            local_file.close()
+            raise
+
+        self.tftp_handler._log(
+            logging.INFO,
+            '%s successfully downloaded to %s' % (filename, local_filename)
+        )
+
+        self.handle = local_file
 
     def get_config(self, name, default):
         """ Fetchs `name` in handler arguments, or return `default`.
         """
         sentinel = object()
-        config = self.server.handler_args.get('http', {}).get(name, sentinel)
+        config = self.tftp_handler.server.handler_args.get(
+            'http', {}
+        ).get(name, sentinel)
         if config is sentinel:
             return default
         return config
-
-    def sanitize_filename(self, filename):
-        """ Cient needs to urlencode the filename he wants to request.
-        """
-        return urllib.unquote(filename)
 
     def _download(self, filename):
         """ Downloads `filename` and yield its content block by block.
@@ -84,59 +129,18 @@ class HTTPHandler(TFTPUDPHandler):
                     raise IOError('Failed to download %s. '
                                   'More than %s bytes.' % (filename, size))
 
-    def load_file(self, filename):
-        """ Downloads `filename` to the cache directory, and return the cached
-        file.
-        """
-        self._log(logging.INFO, 'Downloading %s' % filename)
-
-        # Create cache directory if doesn't already exist
-        cache_dir = self.get_config(
-            'cache_dir', '/var/cache/dyntftpd/handlers/http'
-        )
-        try:
-            os.makedirs(cache_dir)
-        except OSError as exc:
-            if exc.errno != errno.EEXIST:
-                raise
-
-        # Create local file where remote file is stored
-        safe_name = '%s_%s_%s_%s' % (
-            base64.b64encode(filename),
-            self.client_address[0],
-            self.client_address[1],
-            datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
-        )
-        local_filename = os.path.join(cache_dir, safe_name)
-        local_file = open(local_filename, 'w+')
-
-        # Download `filename` to `local_file`
-        try:
-            for block in self._download(filename):
-                local_file.write(block)
-
-        # Clean if there was an error
-        except IOError as exc:
-            # Local file partially written, display a message for investigation
-            self._log(
-                logging.ERROR,
-                'Error while downloading %s. Downloaded content has been '
-                'stored to %s' % (filename, local_filename), exc_info=True
-            )
-
-            local_file.close()
-            raise
-
-        self._log(logging.INFO, '%s successfully downloaded to %s' % (
-            filename, local_filename
-        ))
-
-        return local_file
-
     def unload_file(self):
-        """ The file has been successfully downloaded by the client, remove it
-        from the cache.
+        self.handle.close()
+
+
+class HTTPHandler(TFTPUDPHandler):
+    """ Serve HTTP files by TFTP for clients that don't have a HTTP client
+    (a bootloader like u-boot, for example).
+    """
+
+    session_cls = Session
+
+    def sanitize_filename(self, filename):
+        """ Cient needs to urlencode the filename he wants to request.
         """
-        session = self.get_current_session()
-        if session:
-            os.unlink(session.handle.name)
+        return urllib.unquote(filename)

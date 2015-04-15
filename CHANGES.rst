@@ -7,6 +7,7 @@ Changelog
 * In HTTP handler, the cache filename contains client's source port and human
   readable datetime, making debugging easier.
 * We no longer create a thread for each request.
+* API break: move load_file and unload_file from TFTP handlers to Session.
 
 0.3.0 (2015-02-05)
 ------------------
