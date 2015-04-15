@@ -9,6 +9,7 @@ Changelog
 * We no longer create a thread for each request.
 * API break: move load_file and unload_file from TFTP handlers to Session.
 * Use CleverHandler instead of FileSystemHandler by default.
+* Free resources if client disconnect before completing a transfert.
 
 0.3.0 (2015-02-05)
 ------------------
