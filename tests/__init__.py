@@ -20,6 +20,7 @@ class TFTPServerTestCase(unittest.TestCase):
             host='127.0.0.1', port=0, root=self.tftp_root,
             handler=handler, handler_args=handler_args
         )
+        self.server.timeout = 0.001
         self.listen_ip, self.listen_port = self.server.socket.getsockname()
 
         self.server_thread = threading.Thread(target=self.server.serve_forever)
