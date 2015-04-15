@@ -11,13 +11,11 @@ logger = logging.getLogger(__name__)
 
 class TFTPSession(object):
     """ Represents a file transfert for a client.
-
-    Subclasses must initialize `handle` in the __init__ method.
     """
     def __init__(self, tftp_handler, filename):
         self.tftp_handler = tftp_handler
         self.filename = filename
-        self.handle = None
+        self.handle = self.load_file()
         self.block_id = 0
         self.last_read_is_eof = False
         self.blksize = 512

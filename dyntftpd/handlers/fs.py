@@ -5,9 +5,8 @@ from . import TFTPUDPHandler, TFTPSession
 
 class Session(TFTPSession):
 
-    def __init__(self, tftp_handler, filename):
-        super(Session, self).__init__(tftp_handler, filename)
-        self.handle = open(filename)
+    def load_file(self):
+        return open(self.filename)
 
     def unload_file(self):
         self.handle.close()

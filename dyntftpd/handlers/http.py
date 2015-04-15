@@ -15,12 +15,11 @@ from . import TFTPUDPHandler, TFTPSession
 
 class Session(TFTPSession):
 
-    def __init__(self, tftp_handler, filename):
-        """ Downloads `filename` to the cache directory, and return the cached
+    def load_file(self):
+        """ Downloads `self.filename` to the cache directory, and return the cached
         file.
         """
-        super(Session, self).__init__(tftp_handler, filename)
-        self.tftp_handler._log(logging.INFO, 'Downloading %s' % filename)
+        self.tftp_handler._log(logging.INFO, 'Downloading %s' % self.filename)
 
         # Create cache directory if doesn't already exist
         cache_dir = self.get_config(
@@ -34,7 +33,7 @@ class Session(TFTPSession):
 
         # Create local file where remote file is stored
         safe_name = '%s_%s_%s_%s' % (
-            base64.b64encode(filename),
+            base64.b64encode(self.filename),
             self.tftp_handler.client_address[0],
             self.tftp_handler.client_address[1],
             datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
@@ -42,9 +41,9 @@ class Session(TFTPSession):
         local_filename = os.path.join(cache_dir, safe_name)
         local_file = open(local_filename, 'w+')
 
-        # Download `filename` to `local_file`
+        # Download `self.filename` to `local_file`
         try:
-            for block in self._download(filename):
+            for block in self._download(self.filename):
                 local_file.write(block)
 
         # Clean if there was an error
@@ -53,7 +52,7 @@ class Session(TFTPSession):
             self.tftp_handler._log(
                 logging.ERROR,
                 'Error while downloading %s. Downloaded content has been '
-                'stored to %s' % (filename, local_filename), exc_info=True
+                'stored to %s' % (self.filename, local_filename), exc_info=True
             )
 
             local_file.close()
@@ -61,10 +60,11 @@ class Session(TFTPSession):
 
         self.tftp_handler._log(
             logging.INFO,
-            '%s successfully downloaded to %s' % (filename, local_filename)
+            '%s successfully downloaded to %s' % (self.filename,
+                                                  local_filename)
         )
 
-        self.handle = local_file
+        return local_file
 
     def get_config(self, name, default):
         """ Fetchs `name` in handler arguments, or return `default`.
