@@ -52,6 +52,11 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
     ERR_ALREADY_EXISTS = 6
     ERR_NO_SUCH_USER = 7
 
+    session_cls = None
+
+    def make_session(self, filename):
+        return self.session_cls(self, filename)
+
     def _log(self, level, msg, extra=None, exc_info=False):
         """ Add client_ip to extra.
         """
@@ -156,7 +161,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             return
 
         try:
-            session = self.session_cls(self, filename)
+            session = self.make_session(filename)
             self.set_current_session(session)
         except IOError as exc:
             # If ENOENT, consider the file is missing. Otherwise, consider we
