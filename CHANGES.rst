@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.3.1 (unreleased)
+0.4.0 (2015-04-16)
 ------------------
 
 * In HTTP handler, the cache filename contains client's source port and human
