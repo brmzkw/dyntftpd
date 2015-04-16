@@ -15,7 +15,7 @@ class TFTPSession(object):
     def __init__(self, tftp_handler, filename):
         self.tftp_handler = tftp_handler
         self.filename = filename
-        self.handle = self.load_file()
+        self.handle = None
         self.block_id = 0
         self.last_read_is_eof = False
         self.blksize = 512
@@ -155,14 +155,13 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             return
 
         try:
-            filename = self.sanitize_filename(filename)
-        except ValueError as exc:
+            session = self.make_session(filename)
+        except ValueError as exc:  # if filename is invalid
             self.send_error(self.ERR_PERM, str(exc))
             return
 
         try:
-            session = self.make_session(filename)
-            self.set_current_session(session)
+            session.handle = session.load_file()
         except IOError as exc:
             # If ENOENT, consider the file is missing. Otherwise, consider we
             # don't have the permission to read it.
@@ -183,6 +182,8 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             self.send_error(self.ERR_UNDEFINED, 'Internal error')
             return
 
+        self.set_current_session(session)
+
         # If there is a supported option, return a OACK, otherwise return the
         # first packet.
         # For now, only 'blksize' is supported.
@@ -200,12 +201,6 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
 
         # No options, return the first part of the file
         self.send_data()
-
-    def sanitize_filename(self, filename):
-        """ Compute a filename that can be loaded by load_file. Make security
-        checks to prevent path transversal.
-        """
-        raise NotImplementedError
 
     def handle_ack(self, block_id):
         """ Client has aknowledged a block id. Can be a retransmission or the

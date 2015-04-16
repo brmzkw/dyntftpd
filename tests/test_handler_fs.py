@@ -1,6 +1,6 @@
 import os
 
-from dyntftpd.handlers import TFTPUDPHandler
+from dyntftpd.handlers import TFTPUDPHandler, TFTPSession
 
 from . import TFTPServerTestCase
 
@@ -172,16 +172,20 @@ class TestFileSystemHandler(TFTPServerTestCase):
         self.assertEqual(data, '\x00\x03\x00\x02' + 'B' * 512)
 
 
-class CustomHandler(TFTPUDPHandler):
+class CustomSession(TFTPSession):
 
-    def sanitize_filename(self, filename):
-        return filename
-
-    def load_file(self, filename):
+    def load_file(self):
         raise OSError('xxx')
 
 
+class CustomHandler(TFTPUDPHandler):
+
+    session_cls = CustomSession
+
+
 class TestCustomHandler(TFTPServerTestCase):
+
+    session_cls = CustomSession
 
     def setUp(self):
         return super(TestCustomHandler, self).setUp(handler=CustomHandler)

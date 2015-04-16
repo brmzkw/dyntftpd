@@ -15,6 +15,12 @@ from . import TFTPUDPHandler, TFTPSession
 
 class Session(TFTPSession):
 
+    def __init__(self, tftp_handler, filename):
+        """ Cient needs to urlencode the filename he wants to request.
+        """
+        url = urllib.unquote(filename)
+        super(Session, self).__init__(tftp_handler, url)
+
     def load_file(self):
         """ Downloads `self.filename` to the cache directory, and return the cached
         file.
@@ -139,8 +145,3 @@ class HTTPHandler(TFTPUDPHandler):
     """
 
     session_cls = Session
-
-    def sanitize_filename(self, filename):
-        """ Cient needs to urlencode the filename he wants to request.
-        """
-        return urllib.unquote(filename)
