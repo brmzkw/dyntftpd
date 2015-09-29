@@ -5,7 +5,11 @@ __version__ = '0.4.1'
 
 # Prevent message "No handlers could be found for logger "dyntftpd"" to be
 # displayed
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+# Degrade on Python < 2.7
+try:
+    logging.getLogger(__name__).addHandler(logging.NullHandler())
+except AttributeError:
+    pass
 
 
 from .server import TFTPServer
