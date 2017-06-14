@@ -94,7 +94,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         handle_* methods.
         """
         data = self.request[0]
-        opcode, = struct.unpack('!h', data[0:2])
+        opcode, = struct.unpack('!H', data[0:2])
 
         data = data[2:]  # skip opcode
 
@@ -131,7 +131,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
             self.handle_rrq(filename, mode, options)
 
         elif opcode == self.OP_ACK:
-            block_id, = struct.unpack('!h', data)
+            block_id, = struct.unpack('!H', data)
             self.handle_ack(block_id)
 
         else:
@@ -235,7 +235,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
     def send_oack(self, **options):
         """ Send options acknowledgement.
         """
-        packed = struct.pack('!h', self.OP_OACK)
+        packed = struct.pack('!H', self.OP_OACK)
         for key, value in options.iteritems():
             packed += key + '\x00' + value + '\x00'
 
@@ -251,7 +251,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         session.last_read_is_eof = len(data) < session.blksize
 
         try:
-            packed = struct.pack('!hh', self.OP_DATA, session.block_id + 1)
+            packed = struct.pack('!HH', self.OP_DATA, session.block_id + 1)
         except struct.error as exc:
             self.send_error(
                 self.ERR_UNDEFINED,
@@ -269,7 +269,7 @@ class TFTPUDPHandler(SocketServer.BaseRequestHandler):
         """
         self._log(logging.ERROR, error_msg)
         socket = self.request[1]
-        packed = struct.pack('!hh', self.OP_ERROR, error_code)
+        packed = struct.pack('!HH', self.OP_ERROR, error_code)
         packed += error_msg + '\x00'
         socket.sendto(packed, self.client_address)
         self.cleanup_session()
