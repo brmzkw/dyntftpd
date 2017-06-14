@@ -47,7 +47,7 @@ class TFTPServerTestCase(unittest.TestCase):
         return self.send('\x00\x04' + block_string)
 
     def ack_n(self, block_id):
-        return self.ack(struct.pack('>h', block_id))
+        return self.ack(struct.pack('!H', block_id))
 
     def tearDown(self):
         shutil.rmtree(self.tftp_root)
