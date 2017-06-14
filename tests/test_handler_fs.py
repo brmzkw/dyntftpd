@@ -1,4 +1,5 @@
 import os
+import struct
 
 from dyntftpd.handlers import TFTPUDPHandler, TFTPSession
 
@@ -126,6 +127,27 @@ class TestFileSystemHandler(TFTPServerTestCase):
         # \x00\x03 = data
         # \x00\x01 = block id 2
         self.assertEqual(data, '\x00\x03\x00\x02' + 'C' * 32)
+
+    def test_max_size_file(self):
+        handle = open(os.path.join(self.tftp_root, 'test.txt'), 'w+')
+        for x in range (1, 65535):
+            handle.write(struct.pack('!H', x) * 256)
+        handle.write(struct.pack('!H', 65535) * 16)
+        handle.flush()
+        
+        self.get_file('test.txt')
+        for x in range (1, 65535):
+            data, _ = self.recv()
+            # \x00\x03 = data
+            # \x00\x01 = block id 1
+            self.assertEqual(len(data), 516)
+            self.assertEqual(data, struct.pack('!HH', 3, x) + struct.pack('!H', x) * 256)
+            self.ack_n(x)
+            
+        data, _ = self.recv()
+        self.assertEqual(len(data), 36)
+        self.assertEqual(data, '\x00\x03\xff\xff' + '\xff\xff' * 16)
+        self.ack_n(65535)
 
     def test_directory_transversal(self):
         self.get_file('../../yo.txt')
